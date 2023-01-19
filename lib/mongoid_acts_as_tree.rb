@@ -51,7 +51,7 @@ module Mongoid
           include InstanceMethods
           include Fields
 
-          field path_field, type: Array, default: [], index: true # holds the path
+          field path_field, type: Array, default: [] # , index: true # holds the path
           field depth_field, type: Integer, default: 0 # holds the depth
 
           # make sure child and parent are in the same scope
