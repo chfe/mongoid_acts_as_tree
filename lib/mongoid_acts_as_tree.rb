@@ -234,7 +234,11 @@ module Mongoid
               self.tree_base_class.collection.update({path_field => {"$all" => [self.id]}}, {'$pullAll' => {"#{path_field}" => segments_to_delete}, "$inc" => {"#{depth_field}" => delta_depth}}, :multi => true)
               # 2. update set all new elements, if any
               unless segments_to_insert.empty?
-                self.tree_base_class.collection.update({path_field => {"$all" => [self.id]}}, {'$addToSet' => {"#{path_field}" => segments_to_insert}}, :multi => true)  
+                self.tree_base_class.collection.update(
+                  { path_field => { "$all" => [self.id] } },
+                  { '$addToSet' => { "#{path_field}" => { '$each' => segments_to_insert } } },
+                  :multi => true
+                )
               end
             end
           end
