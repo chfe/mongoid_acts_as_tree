@@ -244,7 +244,6 @@ module Mongoid
           self.errors.add(:parent_id, 'Cyclic Tree Structure') if cyclic
         end
         
-        
         def handle_move
           old_segments  = self.path
           delta_depth   = self.depth
@@ -268,22 +267,25 @@ module Mongoid
               delta_depth         = self.depth - delta_depth
               # get the difference of path segments
               segments_to_delete  = old_segments - self.path
-              # get the difference of path segments the other way around
-              segments_to_insert  = self.path - old_segments
-
-              # 1. pull old elements from path, 
-              self.tree_base_class.collection.update({path_field => {"$all" => [self.id]}}, {'$pullAll' => {"#{path_field}" => segments_to_delete}, "$inc" => {"#{depth_field}" => delta_depth}}, :multi => true)
-              # 2. update set all new elements, if any
-              unless segments_to_insert.empty?
+        
+              # 1. pull old elements from path
+              unless segments_to_delete.empty?
                 self.tree_base_class.collection.update(
                   { path_field => { "$all" => [self.id] } },
-                  { '$addToSet' => { "#{path_field}" => { '$each' => segments_to_insert } } },
+                  { "$pullAll" => { "#{path_field}" => segments_to_delete }, "$inc" => { "#{depth_field}" => delta_depth } },
                   :multi => true
                 )
               end
+        
+              # 2. explicitly set the entire new path to ensure correct order
+              self.tree_base_class.collection.update(
+                { path_field => { "$all" => [self.id] } },
+                { "$set" => { "#{path_field}" => self.path } },
+                :multi => true
+              )
             end
           end
-        end
+        end        
         
         def tree_scope(options={})
           self.tree_base_class.scoped.tap do |new_scope|
