@@ -186,6 +186,27 @@ module Mongoid
         def will_move?
           !self.persisted? || self.send("#{parent_id_field}_changed?")
         end
+
+        # Recalculates the path and depth of the current node and its descendants.
+        # If the node has no parent, its path is set to an empty array and its depth to 0.
+        # If the node has a parent, its path is set to the parent's path plus the parent's id,
+        # and its depth is set to the parent's depth plus 1.
+        # After setting the path and depth, the node is saved without validations.
+        # Finally, the method is recursively called on all of the node's children.
+        def recalculate_path
+          if parent_id.nil? || parent.nil?
+            self.path = []
+            self.depth = 0
+          else
+            self.path = parent.path + [parent.id]
+            self.depth = parent.depth + 1
+          end
+      
+          save(validate: false) # Save without validations to avoid any issues during recalculation
+      
+          # Recalculate paths for all descendants
+          children.each(&:recalculate_path)
+        end
                         
         protected
                 
