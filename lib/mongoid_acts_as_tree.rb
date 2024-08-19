@@ -207,6 +207,26 @@ module Mongoid
           # Recalculate paths for all descendants
           children.each(&:recalculate_path)
         end
+
+        def recalculate_path_dry_run
+          if parent_id.nil? || parent.nil?
+            new_path = []
+            new_depth = 0
+          else
+            new_path = parent.path + [parent.id]
+            new_depth = parent.depth + 1
+          end
+      
+          # Output the current and new values
+          puts "Dry Run: Recalculating path for node ##{id}"
+          puts "  Current Path: #{path.inspect}"
+          puts "  New Path: #{new_path.inspect}"
+          puts "  Current Depth: #{depth}"
+          puts "  New Depth: #{new_depth}"
+      
+          # Recursively check children
+          children.each(&:recalculate_path_dry_run)
+        end
                         
         protected
                 
